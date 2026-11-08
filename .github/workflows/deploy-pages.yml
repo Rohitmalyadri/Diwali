@@ -28,6 +28,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+<<<<<<< HEAD
+=======
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+>>>>>>> 60f5d31da51f6120aaa55e96239be7138a9ba419
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:

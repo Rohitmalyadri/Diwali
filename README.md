@@ -15,9 +15,12 @@ are pushed to the `main` branch.
 To enable deployment in a repository:
 
 1. Create a GitHub repository and push this project to its `main` branch.
-2. Open **Settings → Pages** in the repository.
-3. Set **Build and deployment** to **GitHub Actions**.
-4. Open the **Actions** tab to monitor the deployment.
+2. Ensure **Settings → Actions → General → Workflow permissions** allows
+   workflows to read and write repository contents.
+3. Open the **Actions** tab to monitor the deployment. The workflow requests
+   Pages enablement automatically.
+4. If your organization disables automatic Pages enablement, open
+   **Settings → Pages**, choose **GitHub Actions**, and rerun the workflow.
 
 The published URL will appear in the workflow run summary and under
 **Settings → Pages**.

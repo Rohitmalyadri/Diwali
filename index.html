@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Diwali ✨</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+    background: radial-gradient(
+        ellipse at center,
+        #251039 0%,
+        #10091e 55%,
+        #03030c 100%
+    );
+    height: 100vh;
+    font-family: Georgia, serif;
+}
+
+canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+}
+
+.greeting {
+    position: absolute;
+    top: 43%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    text-align: center;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.greeting h1 {
+    font-size: clamp(2.8rem, 9vw, 7rem);
+    letter-spacing: 8px;
+    font-weight: bold;
+    color: #ffd76a;
+    text-shadow:
+        0 0 10px #ffb300,
+        0 0 25px #ff8c00,
+        0 0 55px #ff4500,
+        0 0 90px #ff8c00;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+.greeting p {
+    margin-top: 20px;
+    color: #fff2cf;
+    font-size: clamp(1rem, 3vw, 1.8rem);
+    letter-spacing: 5px;
+    text-shadow: 0 0 15px gold;
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 10px gold, 0 0 30px orange;
+    }
+    to {
+        text-shadow: 0 0 25px gold, 0 0 60px orange,
+                     0 0 100px #ff4500;
+    }
+}
+
+.diyas {
+    position: absolute;
+    bottom: 7%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 65px;
+    z-index: 3;
+    font-size: clamp(2rem, 5vw, 4rem);
+    filter: drop-shadow(0 0 15px orange);
+    animation: diyaGlow 1.5s infinite alternate;
+}
+
+@keyframes diyaGlow {
+    from { filter: drop-shadow(0 0 8px orange); }
+    to { filter: drop-shadow(0 0 25px gold); }
+}
+
+.footer {
+    position: absolute;
+    bottom: 2%;
+    width: 100%;
+    text-align: center;
+    color: #d9b978;
+    font-size: 12px;
+    letter-spacing: 3px;
+    z-index: 3;
+}
+
+.hint {
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 242, 207, 0.75);
+    font: 0.75rem/1.4 Arial, sans-serif;
+    letter-spacing: 2px;
+    text-align: center;
+    text-transform: uppercase;
+    z-index: 3;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .greeting h1,
+    .diyas {
+        animation: none;
+    }
+
+    .hint {
+        display: none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="fireworks" aria-label="Interactive Diwali fireworks. Click or tap to launch one."></canvas>
+
+<div class="greeting">
+    <h1>HAPPY DIWALI</h1>
+    <p>May your life shine with happiness & prosperity</p>
+</div>
+
+<div class="hint">.</div>
+
+<div class="diyas">
+    <span aria-hidden="true">🪔</span>
+    <span aria-hidden="true">🪔</span>
+    <span aria-hidden="true">🪔</span>
+</div>
+
+<div class="footer">
+    FESTIVAL OF LIGHTS • JOY • PROSPERITY
+</div>
+
+<script>
+const canvas = document.getElementById("fireworks");
+const ctx = canvas.getContext("2d");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let width, height;
+let scale = 1;
+let particles = [];
+let rockets = [];
+
+function resize() {
+    scale = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+}
+
+window.addEventListener("resize", resize);
+resize();
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 6 + 1;
+
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+
+        this.alpha = 1;
+        this.decay = Math.random() * 0.012 + 0.006;
+        this.gravity = 0.045;
+        this.radius = Math.random() * 2.5 + 1;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        this.vy += this.gravity;
+        this.vx *= 0.985;
+        this.vy *= 0.985;
+
+        this.alpha -= this.decay;
+    }
+
+    draw() {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.color;
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+}
+
+class Rocket {
+    constructor(x = Math.random() * width, targetY = Math.random() * height * 0.48 + 50) {
+        this.x = x;
+        this.y = height;
+        this.targetY = targetY;
+        this.speed = Math.random() * 3 + 7;
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.trail = [];
+    }
+
+    update() {
+        this.trail.push({ x: this.x, y: this.y });
+
+        if (this.trail.length > 8) this.trail.shift();
+
+        this.y -= this.speed;
+
+        if (this.y <= this.targetY) {
+            explode(this.x, this.y, this.color);
+            return false;
+        }
+
+        return true;
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 3;
+
+        if (this.trail.length > 1) {
+            ctx.moveTo(this.trail[0].x, this.trail[0].y);
+            this.trail.forEach(p => ctx.lineTo(p.x, p.y));
+        }
+
+        ctx.stroke();
+    }
+}
+
+const colors = [
+    "#ffcc00",
+    "#ff3b3b",
+    "#00e5ff",
+    "#ff66cc",
+    "#7cff00",
+    "#ffffff",
+    "#ff8c00"
+];
+
+function explode(x, y, color) {
+    const count = 100 + Math.random() * 70;
+
+    for (let i = 0; i < count; i++) {
+        particles.push(new Particle(x, y, color));
+    }
+}
+
+function launchAt(x, y) {
+    rockets.push(new Rocket(x, y));
+}
+
+canvas.addEventListener("pointerdown", event => {
+    launchAt(event.clientX, event.clientY);
+});
+
+canvas.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        launchAt(width / 2, height * 0.3);
+    }
+});
+
+canvas.tabIndex = 0;
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    ctx.fillStyle = "rgba(3, 3, 12, 0.18)";
+    ctx.fillRect(0, 0, width, height);
+
+    rockets = rockets.filter(rocket => {
+        const alive = rocket.update();
+        rocket.draw();
+        return alive;
+    });
+
+    particles = particles.filter(p => {
+        p.update();
+        p.draw();
+        return p.alpha > 0;
+    });
+
+    if (!reducedMotion && Math.random() < 0.045) {
+        rockets.push(new Rocket());
+    }
+}
+
+animate();
+
+// Initial fireworks
+if (!reducedMotion) {
+    setInterval(() => {
+        explode(
+            Math.random() * width,
+            Math.random() * height * 0.5 + 50,
+            colors[Math.floor(Math.random() * colors.length)]
+        );
+    }, 1800);
+}
+
+</script>
+</body>
+</html>
